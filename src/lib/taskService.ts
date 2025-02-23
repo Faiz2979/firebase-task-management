@@ -2,12 +2,13 @@ import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase
 import { db } from "./firebaseConfig";
 import Status from "./status-enum";
 // 🔹 Tambah Task
-export const addTask = async (title: string, description:string = "" ) => {
+export const addTask = async (title: string, description:string = "", date: Date ) => {
   try {
     const docRef = await addDoc(collection(db, "tasks"), {
         title,
         description,
         status: Status.OPEN,
+        deadline: new Date(date),
         createdAt: new Date(),
         updatedAt: new Date(),
     });
@@ -18,12 +19,15 @@ export const addTask = async (title: string, description:string = "" ) => {
 };
 
 // 🔹 Ambil Semua Task
-export const getTasks = async () => {
+export const getTasks = async (): Promise<{ id: string; title: string; description: string; status: Status, deadline: Date }[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, "tasks"));
     return querySnapshot.docs.map((doc) => ({ 
         id: doc.id, 
-        ...doc.data() 
+        title: doc.data().title as string,
+        description: doc.data().description as string,
+        status: doc.data().status as Status,
+        deadline: doc.data().deadline
     }));
   } catch (error) {
     console.error("Error fetching tasks: ", error);
@@ -32,10 +36,10 @@ export const getTasks = async () => {
 };
 
 // 🔹 Update Task (ubah status selesai)
-export const updateTask = async (taskId: string, status: Status, title:string , description:string) => {
+export const updateTask = async (taskId: string, status: Status, title:string , description:string, deadline: Date) => {
   try {
     const taskRef = doc(db, "tasks", taskId);
-    await updateDoc(taskRef, { title,description, status, updatedAt: new Date() });
+    await updateDoc(taskRef, { title,description, status, updatedAt: new Date(), deadline: new Date(deadline) });
   } catch (error) {
     console.error("Error updating task: ", error);
   }

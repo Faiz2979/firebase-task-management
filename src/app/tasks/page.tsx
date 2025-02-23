@@ -9,6 +9,7 @@ export default function TaskPage() {
   >([]);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState(new Date);
 
   // 🔹 Ambil Task dari Firestore saat halaman dimuat
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function TaskPage() {
   // 🔹 Tambah Task Baru
   const handleAddTask = async () => {
     if (!taskTitle) return;
-    await addTask(taskTitle, taskDescription);
+    await addTask(taskTitle, taskDescription, taskDeadline);
     setTaskTitle("");
     setTaskDescription("");
     loadTasks();
@@ -32,7 +33,7 @@ export default function TaskPage() {
   // 🔹 Toggle Status Task
   const handleToggleTask = async (task: { id: string; title: string; description: string; status: Status }) => {
     const newStatus = task.status === Status.OPEN ? Status.DONE : Status.OPEN;
-    await updateTask(task.id, newStatus, task.title, task.description);
+    await updateTask(task.id, newStatus, task.title, task.description, taskDeadline);
     loadTasks();
   };
 
@@ -53,33 +54,28 @@ export default function TaskPage() {
           placeholder="Enter task title..."
           value={taskTitle}
           onChange={(e) => setTaskTitle(e.target.value)}
-          className="border p-2"
+          className="border p-2 text-black"
         />
         <textarea
           placeholder="Enter task description..."
           value={taskDescription}
           onChange={(e) => setTaskDescription(e.target.value)}
-          className="border p-2"
+          className="border p-2 text-black"
+        />
+
+        <input
+          placeholder="Select a date"
+          type="date"
+          className="text-black"
+          name="date"
+          id=""
+          value={taskDeadline.toISOString().split('T')[0]}
+          onChange={(e) => setTaskDeadline(new Date(e.target.value))}
         />
         <button onClick={handleAddTask} className="bg-blue-500 text-white px-4 py-2">Add</button>
       </div>
 
       {/* 🔹 List Task */}
-      <ul className="space-y-2">
-        {tasks.map((task) => (
-          <li key={task.id} className="flex justify-between items-center p-2 border rounded">
-            <span
-              onClick={() => handleToggleTask(task)}
-              className={`cursor-pointer ${task.status === Status.DONE ? "line-through text-gray-500" : ""}`}
-            >
-              {task.title}
-            </span>
-            <button onClick={() => handleDeleteTask(task.id)} className="bg-red-500 text-white px-2 py-1">
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
