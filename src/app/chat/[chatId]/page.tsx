@@ -3,22 +3,45 @@
 import { db } from "@/lib/firebaseConfig";
 import { sendMessage } from "@/pages/chatServices";
 import { collection, doc, getDoc, onSnapshot, orderBy, query } from "firebase/firestore";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ChatPage() {
     const { chatId } = useParams() as { chatId: string };
+    const router = useRouter();
     const [messages, setMessages] = useState<any[]>([]);
     const [chatInfo, setChatInfo] = useState<any>(null);
     const [newMessage, setNewMessage] = useState("");
     const [currentUserID, setCurrentUserID] = useState("") ; // Gantilah dengan user ID yang sesuai
 
     useEffect(() => {
-        if (!chatId) return;
         const storedUser = localStorage.getItem("authToken");
         if (!storedUser) return;
         const decodedToken = JSON.parse(atob(storedUser.split(".")[1]));
         setCurrentUserID(decodedToken.user_id);
+    }, []);
+
+    useEffect(() => {
+        if (!chatId || !currentUserID) return; // Tunggu sampai currentUserId tersedia
+    
+        const chatRef = doc(db, "chats", chatId);
+        getDoc(chatRef).then((chatSnap) => {
+            if (chatSnap.exists()) {
+                const chatData = chatSnap.data();
+                setChatInfo(chatData);
+    
+                if (!chatData.members.includes(currentUserID)) {
+                    router.replace("/404");
+                }
+            } else {
+                router.replace("/404");
+            }
+        });
+    }, [chatId, currentUserID, router]);
+    
+
+    useEffect(() => {
+        if (!chatId) return;
         const messagesRef = collection(db, "chats", chatId as string, "messages");
         const q = query(messagesRef, orderBy("timestamp"));
 
@@ -28,17 +51,6 @@ export default function ChatPage() {
         });
 
         return () => unsubscribe();
-    }, [chatId]);
-
-    useEffect(() => {
-        if (!chatId) return;
-
-        const chatRef = doc(db, "chats", chatId as string);
-        getDoc(chatRef).then((chatSnap) => {
-            if (chatSnap.exists()) {
-                setChatInfo(chatSnap.data());
-            }
-        });
     }, [chatId]);
 
     const handleSendMessage = async () => {

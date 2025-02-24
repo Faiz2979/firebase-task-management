@@ -49,7 +49,7 @@ export async function openChat(userId: string, friendId: string) {
     if (!chatSnap.exists()) {
         await createChat(userId, friendId);
     }
-    console.log("Chat ID:", chatId);
+
     return chatId;
 }
 
