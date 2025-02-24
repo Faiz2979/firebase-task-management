@@ -12,6 +12,7 @@ import {
     where
 } from "firebase/firestore";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface User {
@@ -93,7 +94,7 @@ export default function SidebarWithNavbar() {
     <>
       <div className={`fixed inset-y-0 left-0 w-80 bg-gray-900 text-white transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform z-40 md:translate-x-0`}>
         <div className="p-5 flex justify-between items-center border-b border-gray-700">
-          <span className="text-lg font-semibold">Friends</span>
+          <span className="text-lg font-semibold">TaskCanvas</span>
           <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400">✕</button>
         </div>
 
@@ -113,10 +114,10 @@ export default function SidebarWithNavbar() {
           {activeTab === "friends" && (
             <div>
               {friends.length > 0 ? friends.map((friend) => (
-                <div key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                <Link href={`/chat/`} key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
                   <Image src={friend.picture || "/placeholder.svg"} alt={friend.name} width={35} height={35} className="rounded-full" />
                   <span className="ml-3 flex-grow">{friend.name}</span>
-                </div>
+                </Link>
               )) : <p className="text-gray-400">No friends yet.</p>}
             </div>
           )}
