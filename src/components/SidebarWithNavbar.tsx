@@ -3,13 +3,13 @@
 import { db } from "@/lib/firebaseConfig";
 import { acceptFriendRequest, addFriend } from "@/pages/friendsService";
 import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    onSnapshot,
-    query,
-    where
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -148,7 +148,7 @@ export default function SidebarWithNavbar() {
                 <div key={result.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
                   <Image src={result.picture || "/placeholder.svg"} alt={result.name} width={35} height={35} className="rounded-full" />
                   <span className="ml-3 flex-grow">{result.name}</span>
-                  {result.name !== user?.name && (
+                  {result.email !== user?.email && (
                     <button onClick={() => addFriend(user?.user_id as string, result.user_id)} className="bg-blue-500 px-2 py-1 rounded text-white">➕</button>
                   )}
                 </div>

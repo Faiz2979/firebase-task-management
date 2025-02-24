@@ -11,10 +11,16 @@ export default function ChatPage() {
     const [messages, setMessages] = useState<any[]>([]);
     const [chatInfo, setChatInfo] = useState<any>(null);
     const [newMessage, setNewMessage] = useState("");
+    const [currentUserID, setCurrentUserID] = useState("") ; // Gantilah dengan user ID yang sesuai
 
     useEffect(() => {
         if (!chatId) return;
-
+        const storedUser = localStorage.getItem("authToken");
+        // console.log("Current User: "+storedUser);
+        if (!storedUser) return;
+        const decodedToken = JSON.parse(atob(storedUser.split(".")[1]));
+        // console.log("Current User ID: "+decodedToken.user_id);
+        setCurrentUserID(decodedToken.user_id);
         const messagesRef = collection(db, "chats", chatId as string, "messages");
         const q = query(messagesRef, orderBy("timestamp"));
 
@@ -39,9 +45,10 @@ export default function ChatPage() {
 
     const handleSendMessage = async () => {
         if (!newMessage.trim()) return;
-        await sendMessage(chatId as string, "userId", newMessage);
-        setNewMessage("");
-    };
+            await sendMessage(chatId as string, currentUserID, newMessage);
+            setNewMessage("");
+            
+        };
 
     return (
         <div className="flex h-screen">
@@ -58,7 +65,9 @@ export default function ChatPage() {
                 {/* Chat Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {messages.map(msg => (
-                        <div key={msg.id} className={`p-3 rounded-lg max-w-xs ${msg.sender === "userId" ? "bg-blue-500 text-white ml-auto" : "bg-gray-700 text-white"}`}>
+                        <div 
+                            key={msg.id} 
+                            className={`p-3 rounded-lg max-w-xs ${msg.senderId === currentUserID ? "bg-blue-500 text-white ml-auto" : "bg-gray-700 text-white mr-auto"}`}>
                             <span>{msg.text}</span>
                         </div>
                     ))}
