@@ -16,10 +16,8 @@ export default function ChatPage() {
     useEffect(() => {
         if (!chatId) return;
         const storedUser = localStorage.getItem("authToken");
-        // console.log("Current User: "+storedUser);
         if (!storedUser) return;
         const decodedToken = JSON.parse(atob(storedUser.split(".")[1]));
-        // console.log("Current User ID: "+decodedToken.user_id);
         setCurrentUserID(decodedToken.user_id);
         const messagesRef = collection(db, "chats", chatId as string, "messages");
         const q = query(messagesRef, orderBy("timestamp"));
@@ -67,14 +65,14 @@ export default function ChatPage() {
                     {messages.map(msg => (
                         <div 
                             key={msg.id} 
-                            className={`p-3 rounded-lg max-w-xs ${msg.senderId === currentUserID ? "bg-blue-500 text-white ml-auto" : "bg-gray-700 text-white mr-auto"}`}>
+                            className={`p-3 rounded-lg max-w-xs ${msg.senderId === currentUserID ? "bg-blue-500 text-white ml-auto text-right" : "bg-gray-700 text-white mr-auto"}`}>
                             <span>{msg.text}</span>
                         </div>
                     ))}
                 </div>
 
                 {/* Input Chat */}
-                <div className="p-3 border-t border-gray-700 bg-gray-800 flex">
+                <div className="p-3 px-64 border-t border-gray-700 bg-gray-800 flex">
                     <input 
                         type="text" 
                         value={newMessage} 

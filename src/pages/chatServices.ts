@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebaseConfig";
-import { addDoc, arrayUnion, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 
 export async function sendMessage(chatId: string, senderId: string, text: string) {
     if (!text.trim()) return;
@@ -24,24 +24,6 @@ export async function sendMessage(chatId: string, senderId: string, text: string
     }
 }
 
-export async function createChat(userId: string, friendId: string) {
-    const chatsRef = collection(db, "chats");
-
-    // Cek apakah chat sudah ada
-    const chatId = [userId, friendId].sort().join("_");
-    const chatRef = doc(db, "chats", chatId);
-    const chatSnap = await getDoc(chatRef);
-
-    if (!chatSnap.exists()) {
-        await updateDoc(chatRef, {
-            members: [userId, friendId],
-            isGroup: false,
-            lastMessage: "",
-            updatedAt: serverTimestamp(),
-        });
-    }
-    return chatId;
-}
 
 export async function createGroupChat(adminId: string, members: string[], groupName: string) {
     const chatsRef = collection(db, "chats");
@@ -56,4 +38,33 @@ export async function createGroupChat(adminId: string, members: string[], groupN
     });
 
     return newChatRef.id;
+}
+
+
+export async function openChat(userId: string, friendId: string) {
+    const chatId = [userId, friendId].sort().join("_");
+    const chatRef = doc(db, "chats", chatId);
+    const chatSnap = await getDoc(chatRef);
+
+    if (!chatSnap.exists()) {
+        await createChat(userId, friendId);
+    }
+    console.log("Chat ID:", chatId);
+    return chatId;
+}
+
+export async function createChat(userId: string, friendId: string) {
+    const chatId = [userId, friendId].sort().join("_");
+    const chatRef = doc(db, "chats", chatId);
+
+    const chatSnap = await getDoc(chatRef);
+    if (!chatSnap.exists()) {
+        await setDoc(chatRef, {
+            members: [userId, friendId],
+            isGroup: false,
+            lastMessage: "",
+            updatedAt: serverTimestamp(),
+        });
+    }
+    return chatId;
 }

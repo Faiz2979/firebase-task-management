@@ -1,6 +1,7 @@
 "use client";
 
 import { db } from "@/lib/firebaseConfig";
+import { openChat } from "@/pages/chatServices";
 import { acceptFriendRequest, addFriend } from "@/pages/friendsService";
 import {
   collection,
@@ -13,6 +14,7 @@ import {
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface User {
@@ -23,6 +25,7 @@ interface User {
 }
 
 export default function SidebarWithNavbar() {
+  const router= useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [friends, setFriends] = useState<User[]>([]);
@@ -35,7 +38,6 @@ export default function SidebarWithNavbar() {
     const storedUser = localStorage.getItem("authToken");
     if (storedUser) {
       const decodedToken = JSON.parse(atob(storedUser.split(".")[1]));
-      console.log(decodedToken)
       setUser(decodedToken);
       fetchFriendsRealtime(decodedToken.user_id);
       fetchFriendRequestsRealtime(decodedToken.user_id);
@@ -90,11 +92,22 @@ export default function SidebarWithNavbar() {
     setSearchResults(results);
   }
 
+  async function openMyChat(friendId: string) {
+    if (!user) return;
+    
+    try {
+      const chatId = await openChat(user.user_id, friendId);
+      router.push(`/chat/${chatId}`);
+    } catch (error) {
+      console.error("Error opening chat:", error);
+    }
+  }
+
   return (
     <>
       <div className={`fixed inset-y-0 left-0 w-80 bg-gray-900 text-white transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform z-40 md:translate-x-0`}>
         <div className="p-5 flex justify-between items-center border-b border-gray-700">
-          <span className="text-lg font-semibold">TaskCanvas</span>
+          <Link href="/" className="text-lg font-semibold">TaskCanvas</Link>
           <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400">✕</button>
         </div>
 
@@ -114,10 +127,10 @@ export default function SidebarWithNavbar() {
           {activeTab === "friends" && (
             <div>
               {friends.length > 0 ? friends.map((friend) => (
-                <Link href={`/chat/`} key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                <button onClick={() => openMyChat(friend.user_id)} key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
                   <Image src={friend.picture || "/placeholder.svg"} alt={friend.name} width={35} height={35} className="rounded-full" />
                   <span className="ml-3 flex-grow">{friend.name}</span>
-                </Link>
+                </button>
               )) : <p className="text-gray-400">No friends yet.</p>}
             </div>
           )}
