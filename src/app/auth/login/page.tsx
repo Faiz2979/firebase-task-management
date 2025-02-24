@@ -1,5 +1,5 @@
 "use client";
-import { loginUser, loginWithGoogle, logoutUser, registerUser } from "@/lib/authService";
+import { loginUser, loginWithGoogle, logoutUser, registerUser } from "@/pages/authService";
 import { User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,9 +35,6 @@ export default function AuthPage() {
         const googleUser = await loginWithGoogle();
         setUser(googleUser);
         const token = await googleUser.getIdToken();
-        console.log(token);
-        const decodedToken = JSON.parse(atob(token.split('.')[1]));
-        console.log(decodedToken);
         localStorage.setItem("authToken", token);
         router.push("/tasks");
         } catch (error: any) {

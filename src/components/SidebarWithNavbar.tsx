@@ -1,151 +1,161 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { db } from "@/lib/firebaseConfig";
+import { acceptFriendRequest, addFriend } from "@/pages/friendsService";
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    onSnapshot,
+    query,
+    where
+} from "firebase/firestore";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 interface User {
-  name: string
-  email: string
-  picture: string
+  user_id: string;
+  name: string;
+  email: string;
+  picture: string;
 }
 
 export default function SidebarWithNavbar() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [friendRequests, setFriendRequests] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState("friends");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("authToken")
+    const storedUser = localStorage.getItem("authToken");
     if (storedUser) {
-      const decodedToken = JSON.parse(atob(storedUser.split(".")[1]))
-      setUser(decodedToken)
+      const decodedToken = JSON.parse(atob(storedUser.split(".")[1]));
+      console.log(decodedToken)
+      setUser(decodedToken);
+      fetchFriendsRealtime(decodedToken.user_id);
+      fetchFriendRequestsRealtime(decodedToken.user_id);
     }
-  }, [])
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken")
-    setUser(null)
+  function fetchFriendsRealtime(userId: string) {
+    const userRef = doc(db, "users", userId);
+    return onSnapshot(userRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (Array.isArray(data.friends)) {
+          const friendsData = await Promise.all(
+            data.friends.map(async (friendId: string) => {
+              const friendDoc = await getDoc(doc(db, "users", friendId));
+              return friendDoc.exists() ? { user_id: friendDoc.id, ...friendDoc.data() } as User : null;
+            })
+          );
+          setFriends(friendsData.filter(Boolean) as User[]);
+        }
+      }
+    });
+  }
+
+  function fetchFriendRequestsRealtime(userId: string) {
+    const userRef = doc(db, "users", userId);
+    return onSnapshot(userRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (Array.isArray(data.friendRequests)) {
+          const requests = await Promise.all(
+            data.friendRequests.map(async (requestId: string) => {
+              const requestDoc = await getDoc(doc(db, "users", requestId));
+              return requestDoc.exists() ? { user_id: requestDoc.id, ...requestDoc.data() } as User : null;
+            })
+          );
+          setFriendRequests(requests.filter(Boolean) as User[]);
+        }
+      }
+    });
+  }
+
+  async function searchFriends(queryString: string) {
+    if (!queryString.trim()) return setSearchResults([]);
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("name", ">=", queryString), where("name", "<=", queryString + "\uf8ff"));
+    const querySnapshot = await getDocs(q);
+    const results: User[] = [];
+    querySnapshot.forEach((doc) => {
+      results.push({ user_id: doc.id, ...doc.data() } as User);
+    });
+    setSearchResults(results);
   }
 
   return (
     <>
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full bg-white border-b shadow-md z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            {/* Sidebar Toggle Button (Mobile) */}
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden text-gray-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-
-            {/* Logo & Brand */}
-            <Link href="/" className="text-xl font-bold text-gray-800">
-              TaskCanvas
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
-              <Link href="/tasks" className="text-gray-600 hover:text-gray-900">
-                Tasks
-              </Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
-                Pricing
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-gray-900">
-                About
-              </Link>
-            </div>
-
-            {/* User Menu / Login */}
-            <div className="flex items-center">
-              {user ? (
-                <div className="relative">
-                  <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                    <Image
-                      src={user.picture || "/placeholder.svg"}
-                      alt={user.name}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <span className="hidden md:block text-sm font-medium text-gray-700">{user.name}</span>
-                  </div>
-
-                  {/* Dropdown Menu */}
-                  {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-                      <div className="px-4 py-2 border-b">
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
-                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Profile
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => router.push("/auth/login")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Login / Register
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out z-40 md:translate-x-0`}
-      >
+      <div className={`fixed inset-y-0 left-0 w-80 bg-gray-900 text-white transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform z-40 md:translate-x-0`}>
         <div className="p-5 flex justify-between items-center border-b border-gray-700">
-          <span className="text-lg font-semibold">Menu</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <span className="text-lg font-semibold">Friends</span>
+          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400">✕</button>
         </div>
 
         <nav className="mt-5">
-          <Link href="/tasks" className="block px-4 py-3 hover:bg-gray-700">
-            Tasks
-          </Link>
-          <Link href="/pricing" className="block px-4 py-3 hover:bg-gray-700">
-            Pricing
-          </Link>
-          <Link href="/about" className="block px-4 py-3 hover:bg-gray-700">
-            About
-          </Link>
+          <button onClick={() => setActiveTab("friends")} className={`block w-full text-left px-4 py-3 ${activeTab === "friends" ? "bg-gray-700" : "hover:bg-gray-600"} flex justify-between`}>
+            <span>Friends</span>
+          </button>
+          <button onClick={() => setActiveTab("friendRequests")} className={`block w-full text-left px-4 py-3 ${activeTab === "friendRequests" ? "bg-gray-700" : "hover:bg-gray-600"} flex justify-between`}>
+            <span>Friend Requests</span>
+          </button>
+          <button onClick={() => setActiveTab("addFriends")} className={`block w-full text-left px-4 py-3 ${activeTab === "addFriends" ? "bg-gray-700" : "hover:bg-gray-600"} flex justify-between`}>
+            <span>Add Friends</span>
+          </button>
         </nav>
+
+        <div className="p-5">
+          {activeTab === "friends" && (
+            <div>
+              {friends.length > 0 ? friends.map((friend) => (
+                <div key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                  <Image src={friend.picture || "/placeholder.svg"} alt={friend.name} width={35} height={35} className="rounded-full" />
+                  <span className="ml-3 flex-grow">{friend.name}</span>
+                </div>
+              )) : <p className="text-gray-400">No friends yet.</p>}
+            </div>
+          )}
+          {activeTab === "friendRequests" && (
+            <div>
+              {friendRequests.length > 0 ? friendRequests.map((request) => (
+                <div key={request.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                  <Image src={request.picture || "/placeholder.svg"} alt={request.name} width={35} height={35} className="rounded-full" />
+                  <span className="ml-3 flex-grow">{request.name}</span>
+                  <button onClick={() => acceptFriendRequest(request.user_id,user?.user_id as string)} className="bg-green-500 px-2 py-1 rounded text-white">✔</button>
+                </div>
+              )) : <p className="text-gray-400">No friend requests.</p>}
+            </div>
+          )}
+          {activeTab === "addFriends" && (
+            <div>
+              <input
+                type="text"
+                placeholder="Search friends..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  searchFriends(e.target.value);
+                }}
+                className="w-full px-3 py-2 rounded bg-gray-800 text-white mb-3"
+              />
+              {searchResults.length > 0 ? searchResults.map((result) => (
+                <div key={result.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                  <Image src={result.picture || "/placeholder.svg"} alt={result.name} width={35} height={35} className="rounded-full" />
+                  <span className="ml-3 flex-grow">{result.name}</span>
+                  {result.name !== user?.name && (
+                    <button onClick={() => addFriend(user?.user_id as string, result.user_id)} className="bg-blue-500 px-2 py-1 rounded text-white">➕</button>
+                  )}
+                </div>
+              )) : <p className="text-gray-400">No users found.</p>}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Overlay (Mobile Only) */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Spacing supaya konten tidak tertutup navbar */}
-      <div className="h-16" />
     </>
-  )
+  );
 }

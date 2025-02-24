@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import { auth, db, provider } from "./firebaseConfig";
+import { auth, db, provider } from "../lib/firebaseConfig";
 
 // 🔹 Register dengan Email & Password
 export const registerUser = async (email: string, password: string) => {
@@ -10,6 +10,11 @@ export const registerUser = async (email: string, password: string) => {
     // Simpan user ke Firestore
     await setDoc(doc(db, "users", user.uid), {
         email: user.email,
+        picture: "/images/placeholder.jpg",
+        name: user.displayName,
+        friends: [],
+        friendRequests: [],
+        tasks:[],
         createdAt: serverTimestamp(),
     });
 
@@ -35,7 +40,11 @@ export const loginWithGoogle = async () => {
         await setDoc(userRef, {
         email: user.email,
         name: user.displayName,
+        friends: [],
+        friendRequests: [],
+        tasks:[],
         createdAt: serverTimestamp(),
+        picture: user.photoURL,
         });
     }
 
