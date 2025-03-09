@@ -15,9 +15,9 @@ export default function ChatBlankPage() {
           <div className="flex justify-center mb-6">
             <MessageSquare className="h-24 w-24 text-gray-600" />
           </div>
-          <h1 className="text-2xl font-semibold text-gray-300 mb-3">Welcome to Chat</h1>
+          <h1 className="text-2xl font-semibold text-gray-300 mb-3">Welcome to Socialize</h1>
           <p className="text-gray-500 mb-6">
-            Select a chat from the sidebar or start a new conversation to begin messaging.
+            Select a chat from the sidebar to begin messaging.
           </p>
           <Link href="/chat/new" className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 inline-block">
             Start a new chat

@@ -14,7 +14,7 @@ export default function AuthPage() {
     try {
         const newUser = await registerUser(email, password);
         setUser(newUser);
-        router.push("/tasks");
+        router.push("/chat");
     } catch (error: any) {
         alert(error.message);
     }
