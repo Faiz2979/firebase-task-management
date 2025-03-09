@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 
 export const metadata: Metadata = {
-    title: "TaskCanvas | Login",
+    title: "Socialize | Login",
 };
 
 export default function RootLayout({

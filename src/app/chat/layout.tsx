@@ -3,7 +3,7 @@ import { Metadata } from "next";
 
 
 export const metadata: Metadata = {
-    title: "TaskCanvas | Chats",
+    title: "Socialize | Chats",
 };
 
 export default function RootLayout({

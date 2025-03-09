@@ -127,9 +127,9 @@ export default function SidebarWithNavbar() {
           {activeTab === "friends" && (
             <div>
               {friends.length > 0 ? friends.map((friend) => (
-                <button onClick={() => openMyChat(friend.user_id)} key={friend.user_id} className="flex items-center px-4 py-3 hover:bg-gray-700">
+                <button onClick={() => openMyChat(friend.user_id)} key={friend.user_id} className="flex items-center w-full px-4 py-3 hover:bg-gray-700">
                   <Image src={friend.picture || "/placeholder.svg"} alt={friend.name} width={35} height={35} className="rounded-full" />
-                  <span className="ml-3 flex-grow">{friend.name}</span>
+                  <span className="ml-3 flex">{friend.name}</span>
                 </button>
               )) : <p className="text-gray-400">No friends yet.</p>}
             </div>

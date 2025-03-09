@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskCanvas",
-  description: "An Freeform Task Management App",
+  title: "Socialize",
+  description: "An Chatting Application",
 };
 
 export default function RootLayout({

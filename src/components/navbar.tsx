@@ -59,7 +59,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4 font-semibold">
-            <Link href="/tasks" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm">
+            <Link href="/chat" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm">
               Chats
             </Link>
             <Link href="/pricing" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm">
