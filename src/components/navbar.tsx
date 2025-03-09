@@ -1,10 +1,10 @@
 "use client"
 
+import { WorkflowIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-
 interface User {
   name: string
   email: string
@@ -51,13 +51,16 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           {/* Logo & Brand */}
           <div className="flex items-center">
-            <Link href={"/"} className="text-xl font-bold text-gray-800">TaskCanvas</Link>
+            <Link href={"/"} className="flex items-center gap-2 text-xl font-bold text-gray-800">
+              <WorkflowIcon />
+              <span>Socialize</span>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4 font-semibold">
             <Link href="/tasks" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm">
-              Tasks
+              Chats
             </Link>
             <Link href="/pricing" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm">
               Pricing
